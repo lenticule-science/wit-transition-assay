@@ -1,0 +1,12 @@
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "urn:ame:wit-transition-assay:service:assay-wit-transition-v1",
+  "type": "Service",
+  "name": "WIT transition assay",
+  "summary": "Assays one evidence-bound FOUR knowledge-order cover without normalizing arbitrary programs or executing the customer effect.",
+  "attachment": [
+    { "id": "ni:///sha-256;7LE0QclMlxeoBXyyJu9ghANQVmxr1nd-ydJq8tb6abc", "type": "Document", "mediaType": "application/rmn", "name": "WIT transition assay law" },
+    { "id": "ni:///sha-256;OzkY-m2NLb09_NhwlxLJfGj1BnycTDFyxTXdZotowQ4", "type": "Document", "mediaType": "application/cddl", "name": "org.emsenn.rmn.core.v3" }
+  ],
+  "url": { "type": "Link", "href": "http://127.0.0.1:19827/.well-known/agent-card.json", "mediaType": "application/json" }
+}

@@ -1,0 +1,8 @@
+#lang rmn/v2
+(map
+  ("type" "WitTransitionAssayLaw")
+  ("version" 1)
+  ("precondition" "A customer supplies two immutable typed RMN effect cells and one ni-identified evidence object; the first outcome is the proposal and the second outcome is the claimed completion.")
+  ("operation" "Normalize both effect cells; require every law, party, operation, parent, precondition, postcondition, and refusal commitment to remain identical; require the completion evidence root to equal the supplied evidence identity; and verify exactly one false evidence bit becomes true in FOUR's knowledge order.")
+  ("postcondition" "Return one canonical provider-bound RMN receipt identifying the exact request, proposal, completion, evidence, resulting FOUR outcome, and typed WIT term, then append that receipt through the hired RWIL/RDF provider.")
+  ("refusal" "Refuse malformed or noncanonical RMN, absent or non-ni evidence, zero-bit, two-bit, downward, identity-drifting, evidence-drifting, self-attested, executed, priced, ambient-book, or fallback transitions."))

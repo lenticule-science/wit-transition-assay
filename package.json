@@ -1,0 +1,54 @@
+{
+  "name": "@emsenn/wit-transition-assay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent assay of one evidence-bound FOUR knowledge-order cover between immutable RMN effect cells.",
+  "exports": {
+    ".": "./src/assay.mjs",
+    "./client": "./src/client.mjs",
+    "./law": "./src/law.mjs",
+    "./test-provider": "./src/test-provider.mjs"
+  },
+  "bin": {
+    "serve-wit-transition-assay-a2a": "./bin/server.mjs"
+  },
+  "scripts": {
+    "check": "node --check src/assay.mjs && node --check src/client.mjs && node --check src/law.mjs && node --check src/test-provider.mjs && node --check bin/execute-a2a-task.mjs && node --check bin/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@a2a-js/sdk": "1.0.0-beta.0",
+    "@emsenn/a2a-contracted-agent-service": "file:../../../../../red-cup-engineering/services/web-services-section/services/a2a-services-section/services/a2a-contracted-agent-service",
+    "@emsenn/a2a-rmn-part-service": "file:../../../../../red-cup-engineering/services/web-services-section/services/a2a-services-section/services/a2a-rmn-part-service",
+    "@emsenn/a2a-rmn-task-client-service": "file:../../../../../red-cup-engineering/services/web-services-section/services/a2a-services-section/services/a2a-rmn-task-client-service",
+    "@emsenn/rmn-semantic-conformance": "file:../rmn-semantic-conformance",
+    "@emsenn/rwil-rdf-services": "file:../rwil-rdf-services"
+  },
+  "x-agentic-metro-enterprise": {
+    "node-id": "wit-transition-assay",
+    "actor": "urn:ame:wit-transition-assay",
+    "organizational-kind": "micro-enterprise",
+    "owners": [
+      "obsmetrological-services-section"
+    ],
+    "membrane": {
+      "law": "lib/",
+      "lasting-instances": "content/",
+      "append-only-instances": "data/"
+    },
+    "admission": "one canonical typed pair of immutable RMN effect cells and one ni-identified evidence object",
+    "refusal": "zero, multiple, downward, ungrounded, identity-drifting, self-attested, executed, priced, or fallback transition",
+    "operation-catalog": {
+      "assay-wit-transition": {
+        "contract": "ni:///sha-256;7LE0QclMlxeoBXyyJu9ghANQVmxr1nd-ydJq8tb6abc",
+        "protocol": "A2A 1.0",
+        "legacyCompatibility": false
+      }
+    }
+  }
+}
