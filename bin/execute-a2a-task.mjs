@@ -3,9 +3,9 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Message, Role } from "@a2a-js/sdk";
-import { extractRmnPart, rmnPart } from "@emsenn/a2a-rmn-part-service";
-import { checkTerm, decodeSemantic, semanticBytes } from "@emsenn/rmn-semantic-conformance";
-import { createSettlementStore } from "@emsenn/rwil-rdf-services/client";
+import { extractRmnPart, rmnPart } from "@red-cup-engineering/a2a-rmn-part-service";
+import { checkTerm, decodeSemantic, semanticBytes } from "@red-cup-engineering/rmn-semantic-conformance";
+import { createSettlementStore } from "@lenticule-science/rwil-rdf-projection-service/client";
 import { assayWitTransition, decodeWitTransitionAssayRequest } from "../src/assay.mjs";
 import { WIT_TRANSITION_ASSAY_LAW } from "../src/law.mjs";
 
@@ -20,7 +20,7 @@ export async function executeA2aMessage(source, env = process.env) {
   const providerAccount = env.CONTROLLER_ACCOUNT;
   if (!/^eip155:[1-9][0-9]*:0x[0-9a-fA-F]{40}$/u.test(providerAccount ?? "")) throw new Error("CONTROLLER_ACCOUNT must name the deployed WIT provider CAIP-10 account");
   const result = assayWitTransition(decodeWitTransitionAssayRequest(request[1], request[2]), { providerAccount }), recordedAt = new Date().toISOString();
-  const store = createSettlementStore({ settlementRoot: ROOT, dataRoot: resolve(env.WIT_RWIL_ROOT ?? resolve(ROOT, "data")), agentUrl: env.RWIL_RDF_AGENT, caip2: env.SETTLEMENT_CAIP2 });
+  const store = createSettlementStore({ settlementRoot: ROOT, agentUrl: env.RWIL_RDF_AGENT, caip2: env.SETTLEMENT_CAIP2 });
   await store.record({ category: "wit-transition-assay.receipt", recordedAt, record: { ...result.receipt, semanticId: result.semanticId, law: WIT_TRANSITION_ASSAY_LAW.id } });
   return Message.toJSON({ messageId: randomUUID(), contextId: message.contextId, taskId: message.taskId, role: Role.ROLE_AGENT, parts: [rmnPart(result.canonicalBytes, "wit-transition-receipt.rmn.cbor")], metadata: { disposition: "witnessed-cover", receiptNi: result.semanticId, witnessNi: result.receipt.witness }, extensions: [], referenceTaskIds: [] });
 }

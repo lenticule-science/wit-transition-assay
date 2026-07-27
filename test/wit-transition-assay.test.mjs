@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
-import { semanticId } from "@emsenn/rmn-semantic-conformance";
-import { startRwilProviderProcess } from "@emsenn/rwil-rdf-services/test-provider";
+import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
+import { startRwilProviderProcess } from "@lenticule-science/rwil-rdf-projection-service/test-provider";
 import { assayWitTransition as assayLocal } from "../src/assay.mjs";
 import { assayWitTransition } from "../src/client.mjs";
 import { startWitTransitionAssayProcess } from "../src/test-provider.mjs";

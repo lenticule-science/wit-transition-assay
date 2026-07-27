@@ -15,7 +15,7 @@ mkdir -p "$context_dir"
 base=lib/emsenn/services/561-group/services
 wit=$base/lenticule-science/services/obsmetrological-services-section/services/wit-transition-assay
 for path in package.json package-lock.json src bin content/contracts content/agent-cards content/agent-card-signing content/evm/accounts/eip155-5615610.json; do copy_path "$wit/$path"; done
-for cell in rmn-semantic-conformance rwil-rdf-services; do
+for cell in rmn-semantic-conformance rwil-rdf-projection-service; do
   dep=$base/lenticule-science/services/obsmetrological-services-section/services/$cell
   copy_path "$dep/package.json"; copy_path "$dep/src"; [[ ! -d "$dep/bin" ]] || copy_path "$dep/bin"; [[ ! -d "$dep/types" ]] || copy_path "$dep/types"
 done
