@@ -2,7 +2,7 @@
 set -euo pipefail
 script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_root=$script_dir
-while [[ ! -d "$repo_root/lib/emsenn/services/561-group" || ! -d "$repo_root/lib/emsenn/services/board-of-directors" ]]; do parent=$(dirname -- "$repo_root"); [[ "$parent" != "$repo_root" ]] || exit 66; repo_root=$parent; done
+while [[ ! -d "$repo_root/lib/emsenn/services/561-group" || ! -d "$repo_root/lib/emsenn/services/561-group/services/board-of-directors" ]]; do parent=$(dirname -- "$repo_root"); [[ "$parent" != "$repo_root" ]] || exit 66; repo_root=$parent; done
 context_dir=${1:-}
 [[ "$context_dir" == /tmp/* ]] || { echo "usage: $0 /tmp/build-context" >&2; exit 64; }
 copy_path() {
