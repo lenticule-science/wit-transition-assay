@@ -383,7 +383,7 @@
     {
       "id": "assay-wit-transition",
       "name": "Assay one WIT transition",
-      "description": "Requires one exact 0-to-1 FOUR cover, stable effect identity, and matching evidence root; returns a provider-bound typed WIT receipt.",
+      "description": "Requires one exact 0-to-1 FOUR cover, active effect identity, and matching evidence root; returns a provider-bound typed WIT receipt.",
       "tags": [
         "rmn",
         "four",

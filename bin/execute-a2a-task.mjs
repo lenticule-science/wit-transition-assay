@@ -1,16 +1,27 @@
 #!/usr/bin/env node
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { Message, Role } from "@a2a-js/sdk";
 import { extractRmnPart, rmnPart } from "@red-cup-engineering/a2a-rmn-part-service";
 import { checkTerm, decodeSemantic, semanticBytes } from "@red-cup-engineering/rmn-semantic-conformance";
-import { createSettlementStore } from "@lenticule-science/rwil-rdf-projection-service/client";
+import { recordSettlementRecord } from "@lenticule-science/rwil-rdf-projection-service/client";
 import { assayWitTransition, decodeWitTransitionAssayRequest } from "../src/assay.mjs";
 import { WIT_TRANSITION_ASSAY_LAW } from "../src/law.mjs";
 
-const ROOT = resolve(import.meta.dirname, "..");
-export async function executeA2aMessage(source, env = process.env) {
+function ephemeralRwilBoundary() {
+  const objects = new Map(), memberships = new Map();
+  return Object.freeze({
+    custody: Object.freeze({
+      async put({ ni, bytes, mediaType }) { objects.set(ni, { ni, bytes: Buffer.from(bytes), mediaType }); return { ni }; },
+      async get(reference) { return objects.get(typeof reference === "string" ? reference : reference?.ni) ?? null; },
+    }),
+    categoryIndex: Object.freeze({
+      async add({ predicate, category, ni }) { const key = `${predicate}\n${category}`; if (!memberships.has(key)) memberships.set(key, new Set()); memberships.get(key).add(ni); return { predicate, category, ni }; },
+      async query(category, { predicate }) { return { references: [...(memberships.get(`${predicate}\n${category}`) ?? [])].map((ni) => ({ ni })), continuationToken: undefined }; },
+    }),
+  });
+}
+export async function executeA2aMessage(source, env = process.env, rwil) {
   const message = Message.fromJSON(source);
   if (message.role !== Role.ROLE_USER) throw new Error("WIT transition assay requires an A2A ROLE_USER message");
   if (!env.RWIL_RDF_AGENT) throw new Error("RWIL_RDF_AGENT is required; the assay cannot keep an ambient book");
@@ -20,8 +31,8 @@ export async function executeA2aMessage(source, env = process.env) {
   const providerAccount = env.CONTROLLER_ACCOUNT;
   if (!/^eip155:[1-9][0-9]*:0x[0-9a-fA-F]{40}$/u.test(providerAccount ?? "")) throw new Error("CONTROLLER_ACCOUNT must name the deployed WIT provider CAIP-10 account");
   const result = assayWitTransition(decodeWitTransitionAssayRequest(request[1], request[2]), { providerAccount }), recordedAt = new Date().toISOString();
-  const store = createSettlementStore({ settlementRoot: ROOT, agentUrl: env.RWIL_RDF_AGENT, caip2: env.SETTLEMENT_CAIP2 });
-  await store.record({ category: "wit-transition-assay.receipt", recordedAt, record: { ...result.receipt, semanticId: result.semanticId, law: WIT_TRANSITION_ASSAY_LAW.id } });
+  if (!rwil?.custody || !rwil?.categoryIndex) throw new Error("WIT assay RWIL custody and category index must be injected explicitly");
+  await recordSettlementRecord({ agentUrl: env.RWIL_RDF_AGENT, settlement: providerAccount, actor: "urn:ame:wit-transition-assay", category: "wit-transition-assay.receipt", recordedAt, record: { ...result.receipt, semanticId: result.semanticId, law: WIT_TRANSITION_ASSAY_LAW.id }, ...rwil });
   return Message.toJSON({ messageId: randomUUID(), contextId: message.contextId, taskId: message.taskId, role: Role.ROLE_AGENT, parts: [rmnPart(result.canonicalBytes, "wit-transition-receipt.rmn.cbor")], metadata: { disposition: "witnessed-cover", receiptNi: result.semanticId, witnessNi: result.receipt.witness }, extensions: [], referenceTaskIds: [] });
 }
-try { const source = JSON.parse(readFileSync(0, "utf8")); process.stdout.write(`${JSON.stringify(await executeA2aMessage(source))}\n`); } catch (error) { process.stderr.write(`${error.code ?? "wit-transition-refusal"}: ${error.message}\n`); process.exitCode = 1; }
+try { const source = JSON.parse(readFileSync(0, "utf8")); const rwil = process.env.WIT_TEST_EPHEMERAL_RWIL === "1" ? ephemeralRwilBoundary() : undefined; process.stdout.write(`${JSON.stringify(await executeA2aMessage(source, process.env, rwil))}\n`); } catch (error) { process.stderr.write(`${error.code ?? "wit-transition-refusal"}: ${error.message}\n`); process.exitCode = 1; }

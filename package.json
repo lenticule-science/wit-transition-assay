@@ -14,7 +14,7 @@
     "serve-wit-transition-assay-a2a": "./bin/server.mjs"
   },
   "scripts": {
-    "check": "node --check src/assay.mjs && node --check src/client.mjs && node --check src/law.mjs && node --check src/test-provider.mjs && node --check bin/execute-a2a-task.mjs && node --check bin/server.mjs",
+    "check": "node --check src/assay.mjs && node --check src/client.mjs && node --check src/law.mjs && node --check src/test-provider.mjs && node --check src/ephemeral-a2a-custody.mjs && node --check bin/execute-a2a-task.mjs && node --check bin/server.mjs && node --check bin/test-server.mjs",
     "test": "node --test test/*.test.mjs",
     "verify": "npm run check && npm test"
   },
