@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import test from "node:test";
 import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
+import { rawNiUri } from "@red-cup-engineering/rmn-semantic-conformance-die/canonical-cbor";
 import { startWitnessJournalProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
 import { assayWitTransition as assayLocal } from "../src/assay.mjs";
 import { assayWitTransition } from "../src/client.mjs";
 import { startWitTransitionAssayProcess } from "../src/test-provider.mjs";
 
-const ni = (label) => `ni:///sha-256;${createHash("sha256").update(label).digest("base64url")}`;
+const ni = rawNiUri;
 const account = (digit) => `eip155:31337:0x${digit.repeat(40)}`;
 const PROVIDER_ACCOUNT = account("0");
 function cell(outcome, changes = {}) { return { law: ni("law"), caller: account("1"), provider: account("2"), precondition: ni("pre"), operation: ni("operation"), postcondition: ni("post"), refusal: ni("refusal"), evidenceRoot: ni("bottom"), outcome, measures: [], parent: null, ...changes }; }
