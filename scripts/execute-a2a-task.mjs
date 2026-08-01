@@ -6,7 +6,6 @@ import { extractRmnPart, rmnPart } from "@red-cup-engineering/a2a-rmn-part-servi
 import { checkTerm, decodeSemantic, semanticBytes } from "@red-cup-engineering/rmn-semantic-conformance";
 import { recordSettlementRecord } from "@lenticule-science/witness-journal-rdf-projection-service/client";
 import { assayWitTransition, decodeWitTransitionAssayRequest } from "../src/assay.mjs";
-import { WIT_TRANSITION_ASSAY_LAW } from "../src/law.mjs";
 
 function ephemeralWitnessJournalBoundary() {
   const objects = new Map(), memberships = new Map();
@@ -32,7 +31,7 @@ export async function executeA2aMessage(source, env = process.env, witnessJourna
   if (!/^eip155:[1-9][0-9]*:0x[0-9a-fA-F]{40}$/u.test(providerAccount ?? "")) throw new Error("CONTROLLER_ACCOUNT must name the deployed WIT provider CAIP-10 account");
   const result = assayWitTransition(decodeWitTransitionAssayRequest(request[1], request[2]), { providerAccount }), recordedAt = new Date().toISOString();
   if (!witnessJournal?.custody || !witnessJournal?.categoryIndex) throw new Error("WIT assay WitnessJournal custody and category index must be injected explicitly");
-  await recordSettlementRecord({ agentUrl: env.WITNESS_JOURNAL_RDF_AGENT, settlement: providerAccount, actor: "urn:ame:wit-transition-assay", category: "wit-transition-assay.receipt", recordedAt, record: { ...result.receipt, semanticId: result.semanticId, law: WIT_TRANSITION_ASSAY_LAW.id }, ...witnessJournal });
+  await recordSettlementRecord({ agentUrl: env.WITNESS_JOURNAL_RDF_AGENT, settlement: providerAccount, actor: "urn:ame:wit-transition-assay", category: "wit-transition-assay.receipt", recordedAt, record: { ...result.receipt, semanticId: result.semanticId }, ...witnessJournal });
   return Message.toJSON({ messageId: randomUUID(), contextId: message.contextId, taskId: message.taskId, role: Role.ROLE_AGENT, parts: [rmnPart(result.canonicalBytes, "wit-transition-receipt.rmn.cbor")], metadata: { disposition: "witnessed-cover", receiptNi: result.semanticId, witnessNi: result.receipt.witness }, extensions: [], referenceTaskIds: [] });
 }
 try { const source = JSON.parse(readFileSync(0, "utf8")); const witnessJournal = process.env.WIT_TEST_EPHEMERAL_WITNESS_JOURNAL === "1" ? ephemeralWitnessJournalBoundary() : undefined; process.stdout.write(`${JSON.stringify(await executeA2aMessage(source, process.env, witnessJournal))}\n`); } catch (error) { process.stderr.write(`${error.code ?? "wit-transition-refusal"}: ${error.message}\n`); process.exitCode = 1; }
