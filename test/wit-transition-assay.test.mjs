@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { startRwilProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
+import { startWitnessJournalProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
 import { assayWitTransition as assayLocal } from "../src/assay.mjs";
 import { assayWitTransition } from "../src/client.mjs";
 import { startWitTransitionAssayProcess } from "../src/test-provider.mjs";
@@ -28,13 +28,13 @@ test("zero-bit, two-bit, downward, and identity-drifting revisions are refused",
   assert.throws(() => assayLocal({ proposalCell: neither, completionCell: cell({ positiveEvidence: true, negativeEvidence: false }, { evidenceRoot: evidence, operation: ni("changed") }), evidence }, { providerAccount: PROVIDER_ACCOUNT }), /operation changed/u);
 });
 
-test("the signed A2A die returns a provider-bound receipt and records it through RWIL", async () => {
-  const rwil = await startRwilProviderProcess(), provider = await startWitTransitionAssayProcess({ rwilAgentUrl: rwil.agentCardUrl });
+test("the signed A2A die returns a provider-bound receipt and records it through WitnessJournal", async () => {
+  const witnessJournal = await startWitnessJournalProviderProcess(), provider = await startWitTransitionAssayProcess({ witnessJournalAgentUrl: witnessJournal.agentCardUrl });
   try {
     const evidence = ni("live evidence"), proposalCell = cell({ positiveEvidence: false, negativeEvidence: true }), completionCell = cell({ positiveEvidence: true, negativeEvidence: true }, { evidenceRoot: evidence });
     const result = await assayWitTransition({ agentUrl: provider.agentCardUrl, proposalCell, completionCell, evidence, signal: AbortSignal.timeout(10_000) });
     assert.match(result.provider, /^eip155:[1-9][0-9]*:0x[0-9a-f]{40}$/u);
     assert.equal(result.exchange.agentCard.signatures.length, 1);
     assert.equal(result.witness, semanticId(result.witnessTerm));
-  } finally { await provider.close(); await rwil.close(); }
+  } finally { await provider.close(); await witnessJournal.close(); }
 });
