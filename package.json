@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/assay.mjs",
     "./client": "./src/client.mjs",
-    "./test-provider": "./src/test-provider.mjs"
+    "./test-provider": "./src/test-provider.mjs",
+    "./package.json": "./package.json"
   },
   "bin": {
     "serve-wit-transition-assay-a2a": "./scripts/server.mjs"
