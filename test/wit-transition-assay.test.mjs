@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { rawNiUri } from "@red-cup-engineering/rmn-semantic-conformance-die/canonical-cbor";
-import { startWitnessJournalProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
+import { semanticId } from "@red-cup-engineering/relation-model-notation-runtime";
+import { rawNiUri } from "@red-cup-engineering/relation-model-notation-runtime/canonical-cbor";
+import { startWitnessJournalProviderProcess } from "@red-cup-engineering/witness-journal-rdf-projection-service/test-provider";
 import { assayWitTransition as assayLocal } from "../src/assay.mjs";
 import { assayWitTransition } from "../src/client.mjs";
 import { startWitTransitionAssayProcess } from "../src/test-provider.mjs";

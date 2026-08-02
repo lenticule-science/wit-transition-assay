@@ -1,6 +1,6 @@
-import { assayEffectTransition, checkTerm, semanticBytes, semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { validateFour } from "@red-cup-engineering/rmn-semantic-conformance/four";
-import { decodeRelationalValue, encodeRelationalValue, RELATIONAL_VALUE_TYPE } from "@red-cup-engineering/rmn-semantic-conformance/relational-value";
+import { assayEffectTransition, checkTerm, semanticBytes, semanticId } from "@red-cup-engineering/relation-model-notation-runtime";
+import { validateFour } from "@red-cup-engineering/relation-model-notation-runtime/four";
+import { decodeRelationalValue, encodeRelationalValue, RELATIONAL_VALUE_TYPE } from "@red-cup-engineering/relation-model-notation-runtime/relational-value";
 
 export const WIT_TRANSITION_ASSAY_PROFILE = "org.emsenn.obsmetrology.wit-transition-assay.v1";
 export const EFFECT_TRANSITION_TYPE = ["product", ["product", ["effect"], ["effect"]], ["base", "Evidence"]];

@@ -3,8 +3,8 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { Message, Role } from "@a2a-js/sdk";
 import { extractRmnPart, rmnPart } from "@red-cup-engineering/a2a-rmn-part-service";
-import { checkTerm, decodeSemantic, semanticBytes } from "@red-cup-engineering/rmn-semantic-conformance";
-import { recordSettlementRecord } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { checkTerm, decodeSemantic, semanticBytes } from "@red-cup-engineering/relation-model-notation-runtime";
+import { recordSettlementRecord } from "@red-cup-engineering/witness-journal-rdf-projection-service/client";
 import { assayWitTransition, decodeWitTransitionAssayRequest } from "../src/assay.mjs";
 
 function ephemeralWitnessJournalBoundary() {
