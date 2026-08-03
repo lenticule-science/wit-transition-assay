@@ -1,57 +1,55 @@
-import { assayEffectTransition, checkTerm, semanticBytes, semanticId } from "@red-cup-engineering/relation-model-notation-runtime";
-import { validateFour } from "@red-cup-engineering/relation-model-notation-runtime/four";
-import { decodeRelationalValue, encodeRelationalValue, RELATIONAL_VALUE_TYPE } from "@red-cup-engineering/relation-model-notation-runtime/relational-value";
+import { isDeepStrictEqual } from "node:util";
 
-export const WIT_TRANSITION_ASSAY_PROFILE = "org.emsenn.obsmetrology.wit-transition-assay.v1";
-export const EFFECT_TRANSITION_TYPE = ["product", ["product", ["effect"], ["effect"]], ["base", "Evidence"]];
-const WIT_TYPE = ["wit", ["grounded", ["base", "Effect"], ["base", "Evidence"]]];
+import { semanticJsonBytes, semanticJsonFromBytes, semanticJsonId, semanticJsonRecord } from "./semantic-json.mjs";
+
+export const WIT_TRANSITION_ASSAY_PROFILE = "org.emsenn.obsmetrology.wit-transition-assay.v2";
 const NI = /^ni:\/\/\/sha-256;[A-Za-z0-9_-]{43}$/u;
 const CAIP10 = /^eip155:[1-9][0-9]*:0x[0-9a-fA-F]{40}$/u;
+const STABLE_CELL_FIELDS = ["caller", "law", "operation", "parent", "postcondition", "precondition", "provider", "refusal"];
 
 function fail(code, message) { const error = new Error(message); error.code = code; throw error; }
-function exactKeys(value, keys) { return value && Object.getPrototypeOf(value) === Object.prototype && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0"); }
-function typed(value) { const encoded = encodeRelationalValue(value), term = ["ascribe", encoded.type, encoded.term]; return { id: semanticId(term), bytes: semanticBytes(term), type: encoded.type, term: encoded.term }; }
+function charge(value, name) {
+  if (value === null || typeof value !== "object" || Object.keys(value).sort().join("\0") !== "negativeEvidence\0positiveEvidence" || typeof value.positiveEvidence !== "boolean" || typeof value.negativeEvidence !== "boolean") fail("malformed-four", `${name} must expose exactly the independent positiveEvidence and negativeEvidence bits`);
+  return Object.freeze({ positiveEvidence: value.positiveEvidence, negativeEvidence: value.negativeEvidence });
+}
+function cell(value, name) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) fail("malformed-wit-transition", `${name} must be an effect cell`);
+  if (!NI.test(value.evidenceRoot ?? "")) fail("malformed-wit-transition", `${name}.evidenceRoot must be semantic content identity`);
+  return Object.freeze({ ...structuredClone(value), outcome: charge(value.outcome, `${name}.outcome`) });
+}
+function cover(before, after) {
+  const positive = !before.positiveEvidence && after.positiveEvidence && before.negativeEvidence === after.negativeEvidence;
+  const negative = !before.negativeEvidence && after.negativeEvidence && before.positiveEvidence === after.positiveEvidence;
+  if (positive === negative) fail("not-one-wit", "a WIT must be exactly one 0→1 cover transition in the FOUR knowledge order");
+  return positive ? "positiveEvidence" : "negativeEvidence";
+}
+function withoutId(value) { const copy = { ...value }; delete copy.id; return copy; }
+function exactRecord(value) { return value?.id === semanticJsonId(withoutId(value)); }
 
 export function encodeWitTransitionAssayRequest({ proposalCell, completionCell, evidence }) {
-  const term = ["pair", ["pair", ["effect", proposalCell], ["effect", completionCell]], ["constant", ["base", "Evidence"], evidence]];
-  checkTerm(term, EFFECT_TRANSITION_TYPE);
-  return { type: EFFECT_TRANSITION_TYPE, term };
+  if (!NI.test(evidence ?? "")) fail("malformed-wit-transition", "transition evidence must be semantic content identity");
+  return semanticJsonRecord({ type: "WitTransitionAssayRequest", proposalCell: cell(proposalCell, "proposalCell"), completionCell: cell(completionCell, "completionCell"), evidence });
 }
-
-export function decodeWitTransitionAssayRequest(type, term) {
-  if (JSON.stringify(type) !== JSON.stringify(EFFECT_TRANSITION_TYPE)) fail("malformed-wit-transition", "WIT transition request has the wrong RMN type");
-  checkTerm(term, type);
-  if (term?.[0] !== "pair" || term?.[1]?.[0] !== "pair" || term?.[1]?.[1]?.[0] !== "effect" || term?.[1]?.[2]?.[0] !== "effect" || term?.[2]?.[0] !== "constant") fail("malformed-wit-transition", "WIT transition request must be ((proposal, completion), evidence)");
-  return { proposalCell: term[1][1][1], completionCell: term[1][2][1], evidence: term[2][2] };
+export function decodeWitTransitionAssayRequest(value) {
+  if (!exactRecord(value) || value.type !== "WitTransitionAssayRequest") fail("malformed-wit-transition", "WIT transition request must be exact addressed semantic JSON");
+  return { proposalCell: cell(value.proposalCell, "proposalCell"), completionCell: cell(value.completionCell, "completionCell"), evidence: value.evidence };
 }
-
 export function assayWitTransition(source, { providerAccount } = {}) {
   if (!CAIP10.test(providerAccount ?? "")) fail("missing-wit-provider", "WIT transition assay requires the deployed provider's CAIP-10 account");
-  const encoded = encodeWitTransitionAssayRequest(source), request = ["ascribe", encoded.type, encoded.term];
-  const result = assayEffectTransition(source);
-  const receipt = {
-    kind: "WitTransitionAssayReceipt",
-    profile: WIT_TRANSITION_ASSAY_PROFILE,
-    provider: providerAccount,
-    request: semanticId(request),
-    proposal: result.proposal,
-    completion: result.completion,
-    evidence: source.evidence,
-    witness: result.witness,
-    witnessTerm: result.witnessTerm,
-    outcome: result.outcome,
-  };
-  const document = typed(receipt);
-  return { receipt, semanticId: document.id, canonicalBytes: document.bytes, type: document.type, term: document.term };
+  const request = encodeWitTransitionAssayRequest(source);
+  const proposal = request.proposalCell, completion = request.completionCell;
+  const bit = cover(proposal.outcome, completion.outcome);
+  for (const field of STABLE_CELL_FIELDS) if (!isDeepStrictEqual(proposal[field], completion[field])) fail("malformed-effect-transition", `${field} changed across one effect transition`);
+  if (completion.evidenceRoot !== request.evidence) fail("malformed-effect-transition", "completion evidenceRoot must equal the WIT evidence identity");
+  const proposalId = semanticJsonId(proposal), completionId = semanticJsonId(completion);
+  const witnessTerm = semanticJsonRecord({ type: "WitTransitionWitness", proposal: proposalId, completion: completionId, evidence: request.evidence, before: proposal.outcome, after: completion.outcome, articulatedAxis: bit });
+  const receipt = semanticJsonRecord({ kind: "WitTransitionAssayReceipt", profile: WIT_TRANSITION_ASSAY_PROFILE, provider: providerAccount, request: request.id, proposal: proposalId, completion: completionId, evidence: request.evidence, witness: witnessTerm.id, witnessTerm, outcome: completion.outcome });
+  return { receipt, semanticId: receipt.id, canonicalBytes: semanticJsonBytes(receipt) };
 }
-
-export function decodeWitTransitionAssayReceipt(type, term) {
-  if (JSON.stringify(type) !== JSON.stringify(RELATIONAL_VALUE_TYPE)) fail("malformed-wit-transition", "WIT transition receipt must use the relational RMN type");
-  const value = decodeRelationalValue(type, term);
-  const fields = ["completion", "evidence", "kind", "outcome", "profile", "proposal", "provider", "request", "witness", "witnessTerm"];
-  if (!exactKeys(value, fields) || value.kind !== "WitTransitionAssayReceipt" || value.profile !== WIT_TRANSITION_ASSAY_PROFILE || !CAIP10.test(value.provider ?? "") || ![value.request, value.proposal, value.completion, value.evidence, value.witness].every((identity) => NI.test(identity ?? ""))) fail("malformed-wit-transition", "WIT transition receipt has an unknown, absent, legacy, or malformed-provider field");
-  validateFour(value.outcome);
-  checkTerm(value.witnessTerm, WIT_TYPE);
-  if (semanticId(value.witnessTerm) !== value.witness) fail("malformed-wit-transition", "WIT transition receipt witness identity does not match its typed term");
-  return value;
+export function decodeWitTransitionAssayReceipt(value) {
+  if (!exactRecord(value) || value.kind !== "WitTransitionAssayReceipt" || value.profile !== WIT_TRANSITION_ASSAY_PROFILE || !CAIP10.test(value.provider ?? "") || !exactRecord(value.witnessTerm) || value.witness !== value.witnessTerm.id) fail("malformed-wit-transition", "WIT transition receipt is not exact current semantic content");
+  charge(value.outcome, "receipt.outcome");
+  return Object.freeze(value);
 }
+export const witTransitionBytes = semanticJsonBytes;
+export const witTransitionFromBytes = semanticJsonFromBytes;
