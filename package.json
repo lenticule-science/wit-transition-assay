@@ -33,5 +33,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lenticule-science/wit-transition-assay.git"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
   }
 }
